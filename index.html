@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frank's Loan Calculator</title>
+    <style>
+        /* Global Body Styling with Animated Background */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #ffdde1, #c6ffdd, #fbd786, #f7797d);
+            background-size: 400% 400%;
+            animation: waveBackground 10s infinite ease-in-out;
+            overflow-x: hidden;
+        }
+
+        @keyframes waveBackground {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Container Styling */
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            text-align: center;
+            animation: slideIn 1s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #6a11cb;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #6a11cb;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #5a0ea0;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Overlay and Popup Results */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 1000;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            width: 400px;
+            display: none;
+            animation: bounceIn 0.5s ease forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .popup fieldset {
+            border: 2px solid #6a11cb;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        legend {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #6a11cb;
+        }
+
+        #popupClose {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #popupClose:hover {
+            background-color: #bd2130;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Frank's High-Quality Loan Calculator</h1>
+        <form id="loanForm">
+            <label for="amountNeeded">Amount Needed (GHC):</label>
+            <input type="number" id="amountNeeded" placeholder="Enter the amount needed" required>
+            
+            <label for="interestRate">Annual Interest Rate (%):</label>
+            <input type="number" id="interestRate" placeholder="Enter the interest rate" required>
+            
+            <label for="durationMonths">Loan Duration (Months):</label>
+            <input type="number" id="durationMonths" placeholder="Enter loan duration in months" required>
+            
+            <button type="button" id="calculateButton">Calculate</button>
+        </form>
+    </div>
+
+    <!-- Overlay and Popup -->
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="popupResults">
+        <fieldset>
+            <legend>Loan Results</legend>
+            <p id="faceValue">Face Value Required: </p>
+            <p id="monthlyPayment">Monthly Payment: </p>
+            <button id="popupClose">Close</button>
+        </fieldset>
+    </div>
+
+    <script>
+        document.getElementById("calculateButton").addEventListener("click", function() {
+            // Get inputs
+            const amountNeeded = parseFloat(document.getElementById("amountNeeded").value);
+            const interestRate = parseFloat(document.getElementById("interestRate").value) / 100;
+            const durationMonths = parseInt(document.getElementById("durationMonths").value);
+
+            // Validate inputs
+            if (isNaN(amountNeeded) || isNaN(interestRate) || isNaN(durationMonths) || amountNeeded <= 0 || interestRate <= 0 || durationMonths <= 0) {
+                alert("Please enter valid positive numbers for all fields.");
+                return;
+            }
+
+            // Calculations
+            const durationYears = durationMonths / 12;
+            const totalInterest = amountNeeded * interestRate * durationYears;
+            const faceValue = amountNeeded + totalInterest;
+            const monthlyPayment = faceValue / durationMonths;
+
+            // Display results
+            document.getElementById("faceValue").textContent = `Face Value Required: GHC ${faceValue.toFixed(2)}`;
+            document.getElementById("monthlyPayment").textContent = `Monthly Payment: GHC ${monthlyPayment.toFixed(2)}`;
+            document.getElementById("overlay").style.display = "block";
+            document.getElementById("popupResults").style.display = "block";
+        });
+
+        document.getElementById("popupClose").addEventListener("click", function() {
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("popupResults").style.display = "none";
+            document.getElementById("loanForm").reset();
+        });
+    </script>
+</body>
+</html>
